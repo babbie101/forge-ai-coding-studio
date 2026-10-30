@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live Codebase Canvas</title>
+  <meta name="description" content="A visual launchpad for planning developer projects.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root { --ink:#0f172a; --deep:#0b1220; --panel:#ffffff; --paper:#f8fafc; --line:#dbe4ee; --muted:#64748b; --cyan:#06b6d4; --cyan-dark:#0e7490; --green:#22c55e; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-width:320px; color:var(--ink); background:var(--paper); font-family:Inter,system-ui,sans-serif; }
+    button, input, select, textarea { font:inherit; }
+    button { cursor:pointer; }
+    .mono { font-family:"JetBrains Mono",monospace; }
+    .app { min-height:100vh; display:flex; flex-direction:column; }
+    .topbar { height:58px; display:flex; align-items:center; gap:28px; justify-content:space-between; padding:0 clamp(20px,4vw,56px); background:var(--deep); color:#e2e8f0; border-bottom:1px solid #263449; }
+    .brand { font-size:14px; font-weight:700; display:flex; align-items:center; gap:11px; white-space:nowrap; }
+    .brand-mark { width:19px; height:19px; border:2px solid var(--cyan); border-radius:3px; position:relative; }
+    .brand-mark:after { content:""; position:absolute; width:5px; height:5px; right:-5px; bottom:-5px; border-radius:50%; background:var(--cyan); }
+    .nav { display:flex; gap:25px; margin-right:auto; font-size:12px; color:#9cb0c8; }
+    .nav button { color:inherit; background:transparent; border:0; padding:7px 0; }
+    .nav button.active, .nav button:hover { color:#fff; }
+    .status { font:11px "JetBrains Mono",monospace; white-space:nowrap; }
+    .status i { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--green); margin-right:7px; box-shadow:0 0 0 3px #22c55e22; }
+    .hero { position:relative; isolation:isolate; overflow:hidden; padding:57px clamp(20px,9vw,170px) 51px; background:var(--deep); color:#fff; border-bottom:1px solid #263449; }
+    .grid { position:absolute; inset:0; z-index:-3; background-image:linear-gradient(#94a3b811 1px,transparent 1px),linear-gradient(90deg,#94a3b811 1px,transparent 1px); background-size:25px 25px; }
+    .ascii { position:absolute; z-index:-2; right:3vw; top:10px; color:#20d5f0; opacity:.2; font:11px/1.16 "JetBrains Mono",monospace; letter-spacing:-.04em; white-space:pre; text-shadow:0 0 21px #06b6d488; user-select:none; }
+    .folder { position:absolute; z-index:-1; left:5vw; bottom:-25px; color:#b8f6ff; opacity:.14; font:11px/1.7 "JetBrains Mono",monospace; white-space:pre; user-select:none; }
+    .eyebrow { margin-bottom:12px; font:500 10px "JetBrains Mono",monospace; color:#67e8f9; letter-spacing:.13em; }
+    h1, h2 { font-family: 'Cormorant Garamond', Georgia, serif; }
+    h1 { max-width:650px; margin:0 0 12px; font-size:clamp(32px,4vw,51px); line-height:1.05; letter-spacing:-.055em; }
+    .hero p { max-width:570px; margin:0; color:#cbd5e1; font-size:14px; line-height:1.6; }
+    main { width:min(1100px, calc(100% - 40px)); margin:0 auto; display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:30px; padding:31px 0; }
+    .heading { margin:0 0 13px; color:#536276; font:600 10px "JetBrains Mono",monospace; letter-spacing:.09em; text-transform:uppercase; }
+    .ideas { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; }
+    .idea { padding:17px; min-height:116px; border:1px solid var(--line); border-radius:12px; background:var(--panel); text-align:left; color:var(--ink); transition:transform .18s,box-shadow .18s,border-color .18s; }
+    .idea:hover, .idea.selected { transform:translateY(-3px); border-color:var(--cyan); box-shadow:0 12px 22px #0f172a15; }
+    .idea-icon { width:29px; height:29px; display:grid; place-items:center; margin-bottom:11px; border-radius:8px; background:#ecfeff; color:var(--cyan-dark); font-size:15px; }
+    .idea:nth-child(2) .idea-icon { background:#eff6ff; color:#2563eb; }.idea:nth-child(3) .idea-icon { background:#f5f3ff; color:#7c3aed; }.idea:nth-child(4) .idea-icon { background:#f0fdf4; color:#15803d; }
+    .idea strong { display:block; margin-bottom:4px; font-size:13px; letter-spacing:-.02em; }.idea span { display:block; font-size:11px; line-height:1.45; color:var(--muted); }
+    .templates { padding-left:26px; border-left:1px solid var(--line); }.template { width:100%; padding:12px; display:flex; align-items:flex-start; gap:10px; margin-bottom:9px; border:1px solid #2c3b50; border-radius:10px; background:#101927; color:#fff; text-align:left; transition:transform .18s,border-color .18s; }.template:hover, .template.selected { border-color:var(--cyan); transform:translateX(-2px); }.template-icon { color:#67e8f9; font-size:15px; }.template b { display:block; font-size:11px; line-height:1.35; }.template span { display:block; margin-top:3px; color:#94a3b8; font:9px "JetBrains Mono",monospace; }
+    .launchpad { grid-column:1 / -1; overflow:hidden; border:1px solid var(--line); border-radius:12px; background:#fff; }.tabs { display:flex; gap:24px; padding:0 17px; border-bottom:1px solid var(--line); }.tab { padding:13px 2px 11px; border:0; border-bottom:2px solid transparent; background:transparent; color:var(--muted); font-size:12px; font-weight:600; }.tab.active { border-color:var(--cyan); color:var(--ink); }.panel { padding:15px 17px 17px; }.panel[hidden] { display:none; }.new-project { display:grid; grid-template-columns:minmax(0,1fr) 186px auto; align-items:end; gap:12px; }.workspace { display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:end; gap:12px; }.field label { display:block; margin-bottom:6px; color:var(--muted); font:10px "JetBrains Mono",monospace; }.field textarea,.field select,.field input { width:100%; min-height:37px; padding:9px 10px; border:1px solid #cbd5e1; border-radius:7px; color:var(--ink); background:#fff; font-size:11px; outline-color:var(--cyan); }.field textarea { height:46px; resize:vertical; }.primary, .secondary { min-height:37px; border-radius:7px; padding:0 14px; font-size:11px; font-weight:700; white-space:nowrap; }.primary { border:0; background:var(--ink); color:#fff; }.primary:hover { background:#164e63; }.secondary { border:1px solid #cbd5e1; background:#fff; color:var(--ink); }.secondary:hover { border-color:var(--cyan); color:var(--cyan-dark); }
+    footer { margin-top:auto; display:flex; justify-content:space-between; padding:12px max(20px,calc((100vw - 1100px)/2)); background:#0b1220; border-top:1px solid #243246; color:#94a3b8; font:10px "JetBrains Mono",monospace; } footer b { color:#67e8f9; font-weight:500; }
+    .toast { position:fixed; z-index:5; right:24px; bottom:24px; transform:translateY(90px); padding:12px 15px; border-radius:8px; background:#0f172a; color:#fff; box-shadow:0 14px 28px #0f172a33; font-size:12px; transition:transform .22s; }.toast.show { transform:translateY(0); }
+    .modal { position:fixed; z-index:4; inset:0; display:grid; place-items:center; padding:20px; background:#0f172a99; }.modal[hidden] { display:none; }.modal-card { width:min(530px,100%); border:1px solid #334155; border-radius:13px; background:#101927; color:white; box-shadow:0 24px 50px #0006; overflow:hidden; }.modal-top { display:flex; align-items:center; justify-content:space-between; padding:15px 18px; border-bottom:1px solid #27384d; }.modal-top h2 { margin:0; font-size:14px; }.close { border:0; background:transparent; color:#94a3b8; font-size:20px; }.output { padding:20px; color:#dbeafe; font:11px/1.75 "JetBrains Mono",monospace; white-space:pre-wrap; }.modal-actions { display:flex; justify-content:flex-end; gap:9px; padding:0 18px 18px; }
+    @media (max-width:720px) { .nav { display:none; }.hero { padding-top:44px; }.ascii { opacity:.11; right:-160px; }.folder { display:none; } main { grid-template-columns:1fr; }.templates { padding:0; border:0; }.new-project,.workspace { grid-template-columns:1fr; }.primary,.secondary { width:100%; } footer { gap:10px; font-size:8px; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark"></span>Live Codebase Canvas</div>
+      <nav class="nav" aria-label="Primary"><button class="active">Workspace</button><button>Templates</button><button>Docs</button></nav>
+      <div class="status"><i></i>Canvas ready</div>
+    </header>
+    <section class="hero">
+      <div class="grid"></div>
+      <pre class="ascii" aria-hidden="true">                 .-''''''-.
+             .-'          '-.
+           .'    .-''''-.     '.
+          /     /  /\    \      \
+         ;     |  /##\    |      ;
+         |     |  \##/    |      |
+         ;      \        /       ;
+          \      '-.__.-'       /
+           '.      /|\        .'
+             '-.  / | \   .-'
+                '---+---'
+              .---/ \---.
+           .-'    /___\   '-.
+         _/______/_____|\____\_</pre>
+      <pre class="folder" aria-hidden="true">project/
+├── src/
+│   ├── agents/
+│   ├── canvas/
+│   └── graph.ts
+├── tests/
+└── README.md</pre>
+      <div class="eyebrow">BUILD FROM A MENTAL MODEL</div>
+      <h1>Turn your codebase into a canvas.</h1>
+      <p>Start from a proven architecture, sketch an idea, then watch your system take shape in a living visual workspace.</p>
+    </section>
+    <main>
+      <section>
+        <h2 class="heading">Quick start inspiration</h2>
+        <div class="ideas">
+          <button class="idea" data-vision="A polished retro arcade with a game loop, sprites, and high score persistence."><span class="idea-icon">◫</span><strong>Retro Arcade</strong><span>Game loop, sprites &amp; scoreboards</span></button>
+          <button class="idea" data-vision="A typed FastAPI backend with routes, services, tests, and a PostgreSQL data layer."><span class="idea-icon">⌘</span><strong>FastAPI Backend</strong><span>Typed APIs, routes &amp; services</span></button>
+          <button class="idea" data-vision="An AI agent with tool calling, durable memory, and observable orchestration."><span class="idea-icon">◌</span><strong>AI Agent</strong><span>Tools, memory &amp; orchestration</span></button>
+          <button class="idea" data-vision="A metrics dashboard with event ingestion, queryable signals, and live reporting."><span class="idea-icon">▥</span><strong>Metrics Dashboard</strong><span>Signals, queries &amp; live reporting</span></button>
+        </div>
+      </section>
+      <aside class="templates">
+        <h2 class="heading">Architecture starters</h2>
+        <button class="template" data-template="Streamlit Visual Canvas"><span class="template-icon">▣</span><span><b>Streamlit Visual Canvas</b><span>PYTHON · UI · STATE</span></span></button>
+        <button class="template" data-template="FastAPI Microservice"><span class="template-icon">◫</span><span><b>FastAPI Microservice</b><span>API · DB · TESTS</span></span></button>
+        <button class="template" data-template="PyTorch ML Pipeline"><span class="template-icon">◉</span><span><b>PyTorch ML Pipeline</b><span>DATA · MODEL · EVAL</span></span></button>
+      </aside>
+      <section class="launchpad" aria-label="Project launchpad">
+        <div class="tabs" role="tablist" aria-label="Project mode">
+          <button class="tab active" role="tab" aria-selected="true" aria-controls="new-panel" id="new-tab">Architect New Project</button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="open-panel" id="open-tab">Open Existing Workspace</button>
+        </div>
+        <div id="new-panel" class="panel" role="tabpanel" aria-labelledby="new-tab">
+          <div class="new-project">
+            <div class="field"><label for="vision">YOUR VISION</label><textarea id="vision" placeholder="Describe what you want to build…"></textarea></div>
+            <div class="field"><label for="model">ARCHITECT MODEL</label><select id="model"><option>Canvas Pro · Balanced</option><option>Canvas Fast · Explore</option></select></div>
+            <button id="create" class="primary">Create canvas →</button>
+          </div>
+        </div>
+        <div id="open-panel" class="panel" role="tabpanel" aria-labelledby="open-tab" hidden>
+          <div class="workspace">
+            <div class="field"><label for="path">WORKSPACE PATH</label><input id="path" placeholder="Select a folder to inspect…" readonly></div>
+            <input id="folder" type="file" webkitdirectory directory multiple hidden>
+            <button id="browse" class="secondary">Browse folder</button><button id="open" class="primary">Open workspace →</button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer><span>LOCAL WORKSPACE · CLOUD AI USES YOUR CONFIGURED PROVIDER</span><span><b>⌘ K</b> COMMAND PALETTE</span></footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="result-title" hidden>
+    <div class="modal-card"><div class="modal-top"><h2 id="result-title">Canvas created</h2><button id="close" class="close" aria-label="Close">×</button></div><pre id="output" class="output"></pre><div class="modal-actions"><button id="copy" class="secondary">Copy plan</button><button id="done" class="primary">Done</button></div></div>
+  </div>
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+    const toast = (message) => { const node = $('#toast'); node.textContent = message; node.classList.add('show'); clearTimeout(window.toastTimer); window.toastTimer = setTimeout(() => node.classList.remove('show'), 2400); };
+    const selectTab = (open) => { $('#new-tab').classList.toggle('active', !open); $('#new-tab').setAttribute('aria-selected', String(!open)); $('#open-tab').classList.toggle('active', open); $('#open-tab').setAttribute('aria-selected', String(open)); $('#new-panel').hidden = open; $('#open-panel').hidden = !open; };
+    $('#new-tab').addEventListener('click', () => selectTab(false)); $('#open-tab').addEventListener('click', () => selectTab(true));
+    document.querySelectorAll('.idea').forEach((card) => card.addEventListener('click', () => { document.querySelectorAll('.idea').forEach((item) => item.classList.remove('selected')); card.classList.add('selected'); $('#vision').value = card.dataset.vision; selectTab(false); $('#vision').focus(); toast('Starter added to your vision.'); }));
+    document.querySelectorAll('.template').forEach((card) => card.addEventListener('click', () => { document.querySelectorAll('.template').forEach((item) => item.classList.remove('selected')); card.classList.add('selected'); $('#vision').value = ($('#vision').value ? $('#vision').value + '\n\n' : '') + `Use the ${card.dataset.template} starter architecture.`; selectTab(false); toast(`${card.dataset.template} selected.`); }));
+    $('#browse').addEventListener('click', () => $('#folder').click());
+    $('#folder').addEventListener('change', (event) => { const files = [...event.target.files]; if (!files.length) return; const firstPath = files[0].webkitRelativePath || files[0].name; const root = firstPath.split('/')[0]; $('#path').value = `${root}/  ·  ${files.length} files ready to map`; $('#open').dataset.files = String(files.length); toast(`${files.length} local files selected.`); });
+    const openModal = (title, body) => { $('#result-title').textContent = title; $('#output').textContent = body; $('#modal').hidden = false; $('#done').focus(); };
+    $('#create').addEventListener('click', () => { const vision = $('#vision').value.trim(); if (!vision) { $('#vision').focus(); toast('Add a short project vision first.'); return; } const template = document.querySelector('.template.selected')?.dataset.template || 'Custom architecture'; openModal('Canvas created', `PROJECT PLAN\n────────────\nModel: ${$('#model').value}\nStarter: ${template}\n\n${vision}\n\nNext: map modules → define data flow → generate first files`); });
+    $('#open').addEventListener('click', () => { if (!$('#open').dataset.files) { $('#browse').click(); return; } openModal('Workspace mapped', `WORKSPACE READY\n───────────────\n${$('#path').value}\n\nThe local file manifest is ready for a visual dependency map.\n\nNext: detect entry points → map imports → create canvas`); });
+    const closeModal = () => { $('#modal').hidden = true; }; $('#close').addEventListener('click', closeModal); $('#done').addEventListener('click', closeModal); $('#modal').addEventListener('click', (event) => { if (event.target === $('#modal')) closeModal(); });
+    $('#copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('#output').textContent); toast('Plan copied to clipboard.'); } catch { toast('Copy unavailable in this browser.'); } });
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeModal(); if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); $('#vision').focus(); toast('Command palette is ready for your next command.'); } });
+  </script>
+</body>
+</html>
