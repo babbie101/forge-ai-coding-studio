@@ -13,6 +13,16 @@ Built for the **Nebius x NVIDIA Global Hackathon**, FORGE uses the Nebius Token 
 - **Keep track of progress:** roadmap state is saved with each project under `.forge/roadmap.json`.
 - **Work without a cloud AI account:** browse, edit, and preview local projects without configuring a cloud provider. Ollama can provide local AI when installed and running.
 
+## Screenshots
+
+Start from an idea or open an existing project:
+
+![FORGE home screen with workspace creation and project templates](assets/screenshots/01-forge-home.png)
+
+Edit project files and see the live preview side by side:
+
+![FORGE code editor and live HTML preview](assets/screenshots/02-forge-workspace-preview.png)
+
 ## Demo walkthrough
 
 1. Launch FORGE and select a starter idea or describe a project of your own.
