@@ -3,6 +3,7 @@ os.environ["STREAMLIT_TEST_MODE"] = "1"
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from streamlit.testing.v1 import AppTest
 
 from app import (
@@ -38,6 +39,11 @@ from utils.helpers import safe_file_path
 
 
 APP_FILE = Path(__file__).resolve().parents[1] / "app.py"
+
+
+@pytest.fixture(autouse=True)
+def configure_test_provider(monkeypatch):
+    monkeypatch.setenv("NEBIUS_API_KEY", "test-provider-key")
 
 
 def test_safe_file_path_blocks_path_escape(tmp_path: Path):
